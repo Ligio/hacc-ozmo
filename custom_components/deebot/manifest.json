@@ -3,7 +3,7 @@
   "name": "Ecovacs Deebot",
   "documentation": "https://www.home-assistant.io/components/ecovacs",
   "requirements": [
-    "ozmo==1.0.2"
+    "ozmo==1.0.3"
   ],
   "dependencies": [],
   "codeowners": [

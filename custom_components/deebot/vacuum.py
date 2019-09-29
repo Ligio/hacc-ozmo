@@ -2,36 +2,14 @@
 import logging
 
 from homeassistant.components.vacuum import (
-    SUPPORT_BATTERY,
-    SUPPORT_CLEAN_SPOT,
     SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_SEND_COMMAND,
-    SUPPORT_STATUS,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
     VacuumDevice,
 )
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from . import ECOVACS_DEVICES
+from . import ECOVACS_DEVICES, CONF_SUPPORTED_FEATURES, ECOVACS_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_ECOVACS = (
-    SUPPORT_BATTERY
-    | SUPPORT_RETURN_HOME
-    | SUPPORT_CLEAN_SPOT
-    | SUPPORT_STOP
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
-    | SUPPORT_LOCATE
-    | SUPPORT_STATUS
-    | SUPPORT_SEND_COMMAND
-    | SUPPORT_FAN_SPEED
-)
 
 ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
@@ -41,7 +19,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ecovacs vacuums."""
     vacuums = []
     for device in hass.data[ECOVACS_DEVICES]:
-        vacuums.append(EcovacsDeebotVacuum(device))
+        vacuums.append(EcovacsDeebotVacuum(device, hass.data[ECOVACS_CONFIG][0]))
     _LOGGER.debug("Adding Ecovacs Deebot Vacuums to Hass: %s", vacuums)
     add_entities(vacuums, True)
 
@@ -49,7 +27,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class EcovacsDeebotVacuum(VacuumDevice):
     """Ecovacs Vacuums such as Deebot."""
 
-    def __init__(self, device):
+    def __init__(self, device, config):
+        _LOGGER.debug("CONFIG: %s", str(config))
+
         """Initialize the Ecovacs Vacuum."""
         self.device = device
         self.device.connect_and_wait_until_ready()
@@ -60,15 +40,17 @@ class EcovacsDeebotVacuum(VacuumDevice):
             self._name = "{}".format(self.device.vacuum["did"])
 
         self.clean_mode = 'auto'
-        self._fan_speed = None
+        self._fan_speed = 'normal'
         self._error = None
-        _LOGGER.debug("Vacuum initialized: %s", self.name)
+        self._supported_features = config[CONF_SUPPORTED_FEATURES]
+        _LOGGER.debug("Vacuum initialized: %s with features: %d", self.name, self._supported_features)
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         self.device.statusEvents.subscribe(lambda _: self.schedule_update_ha_state())
         self.device.batteryEvents.subscribe(lambda _: self.schedule_update_ha_state())
         self.device.lifespanEvents.subscribe(lambda _: self.schedule_update_ha_state())
+        self.device.fanEvents.subscribe(self.on_fan_change)
         self.device.errorEvents.subscribe(self.on_error)
 
     def on_error(self, error):
@@ -85,6 +67,10 @@ class EcovacsDeebotVacuum(VacuumDevice):
         self.hass.bus.fire(
             "ecovacs_error", {"entity_id": self.entity_id, "error": error}
         )
+        self.schedule_update_ha_state()
+
+    def on_fan_change(self, fan_speed):
+        self._fan_speed = fan_speed
         self.schedule_update_ha_state()
 
     @property
@@ -115,7 +101,7 @@ class EcovacsDeebotVacuum(VacuumDevice):
     @property
     def supported_features(self):
         """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_ECOVACS
+        return self._supported_features
 
     @property
     def status(self):
@@ -146,7 +132,20 @@ class EcovacsDeebotVacuum(VacuumDevice):
     @property
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
-        return self.device.fan_speed
+        if bool(self.supported_features & SUPPORT_FAN_SPEED):
+            return self._fan_speed
+        return 'normal'
+
+    def set_fan_speed(self, fan_speed, **kwargs):
+        """Set fan speed."""
+        from ozmo import SetCleanSpeed
+
+        self.device.run(SetCleanSpeed(fan_speed))
+        self._fan_speed = fan_speed
+
+    async def async_set_fan_speed(self, fan_speed, **kwargs):
+        self.set_fan_speed(fan_speed)
+        await self.async_update_ha_state()
 
     @property
     def fan_speed_list(self):
@@ -160,7 +159,7 @@ class EcovacsDeebotVacuum(VacuumDevice):
         from ozmo import Clean, SpotArea
 
         self.clean_mode = 'auto'
-        self.device.run(Clean(mode=self.clean_mode, speed=self.device.fan_speed, action='start'))
+        self.device.run(Clean(mode=self.clean_mode, speed=self.fan_speed, action='start'))
 
     def start(self):
         self.turn_on()
@@ -174,19 +173,19 @@ class EcovacsDeebotVacuum(VacuumDevice):
         """Stop the vacuum cleaner."""
         from ozmo import Clean
 
-        self.device.run(Clean(mode=self.clean_mode, speed=self.device.fan_speed, action='stop'))
+        self.device.run(Clean(mode=self.clean_mode, speed=self.fan_speed, action='stop'))
 
     def pause(self, **kwargs):
         """Stop the vacuum cleaner."""
         from ozmo import Clean
 
-        self.device.run(Clean(mode=self.clean_mode, speed=self.device.fan_speed, action='pause'))
+        self.device.run(Clean(mode=self.clean_mode, speed=self.fan_speed, action='pause'))
 
     def resume(self, **kwargs):
         """Stop the vacuum cleaner."""
         from ozmo import Clean
 
-        self.device.run(Clean(mode=self.clean_mode, speed=self.device.fan_speed, action='resume'))
+        self.device.run(Clean(mode=self.clean_mode, speed=self.fan_speed, action='resume'))
 
     def start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task."""
@@ -200,19 +199,13 @@ class EcovacsDeebotVacuum(VacuumDevice):
         from ozmo import Clean
 
         self.clean_mode = 'spot'
-        self.device.run(Clean(mode=self.clean_mode, speed=self.device.fan_speed, action='start'))
+        self.device.run(Clean(mode=self.clean_mode, speed=self.fan_speed, action='start'))
 
     def locate(self, **kwargs):
         """Locate the vacuum cleaner."""
         from ozmo import PlaySound
 
         self.device.run(PlaySound())
-
-    def set_fan_speed(self, fan_speed, **kwargs):
-        """Set fan speed."""
-        from ozmo import SetCleanSpeed
-
-        self.device.run(SetCleanSpeed(fan_speed))
 
     def send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
@@ -245,6 +238,9 @@ class EcovacsDeebotVacuum(VacuumDevice):
             elif 'map' in params:
                 return self.clean_map(params['map'])
 
+        if command == 'set_water_level':
+            return self.set_water_level(params['level'])
+
         self.device.run(VacBotCommand(command, params))
 
     def clean_map(self, map):
@@ -252,20 +248,25 @@ class EcovacsDeebotVacuum(VacuumDevice):
 
         if not map:
             self.clean_mode = 'auto'
-            self.device.run(Clean(mode=self.clean_mode, speed=self.device.fan_speed, action='start'))
+            self.device.run(Clean(mode=self.clean_mode, speed=self.fan_speed, action='start'))
         else:
             self.clean_mode = 'spot_area'
-            self.device.run(SpotArea(map_position=map, speed=self.device.fan_speed, action='start'))
+            self.device.run(SpotArea(map_position=map, speed=self.fan_speed, action='start'))
 
     def clean_area(self, area):
         from ozmo import Clean, SpotArea
 
         if not area:
             self.clean_mode = 'auto'
-            self.device.run(Clean(mode=self.clean_mode, speed=self.device.fan_speed, action='start'))
+            self.device.run(Clean(mode=self.clean_mode, speed=self.fan_speed, action='start'))
         else:
             self.clean_mode = 'spot_area'
-            self.device.run(SpotArea(area=area, speed=self.device.fan_speed, action='start'))
+            self.device.run(SpotArea(area=area, speed=self.fan_speed, action='start'))
+
+    def set_water_level(self, level):
+        from ozmo import SetWaterLevel
+
+        self.device.run(SetWaterLevel(level=level))
 
     @property
     def device_state_attributes(self):

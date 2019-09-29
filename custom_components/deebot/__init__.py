@@ -8,6 +8,20 @@ import voluptuous as vol
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.vacuum import (
+    SUPPORT_BATTERY,
+    SUPPORT_CLEAN_SPOT,
+    SUPPORT_FAN_SPEED,
+    SUPPORT_LOCATE,
+    SUPPORT_RETURN_HOME,
+    SUPPORT_SEND_COMMAND,
+    SUPPORT_STATUS,
+    SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_START,
+    SUPPORT_PAUSE
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,6 +29,25 @@ DOMAIN = "deebot"
 
 CONF_COUNTRY = "country"
 CONF_CONTINENT = "continent"
+CONF_SUPPORTED_FEATURES = "supported_features"
+CONF_UNSUPPORTED_FEATURES = "unsupported_features"
+
+SERVICE_TO_STRING = {
+    SUPPORT_START: "start",
+    SUPPORT_PAUSE: "pause",
+    SUPPORT_STOP: "stop",
+    SUPPORT_RETURN_HOME: "return_home",
+    SUPPORT_FAN_SPEED: "fan_speed",
+    SUPPORT_BATTERY: "battery",
+    SUPPORT_STATUS: "status",
+    SUPPORT_SEND_COMMAND: "send_command",
+    SUPPORT_LOCATE: "locate",
+    SUPPORT_CLEAN_SPOT: "clean_spot",
+    SUPPORT_TURN_ON: "turn_on",
+    SUPPORT_TURN_OFF: "turn_off"
+}
+
+STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -24,6 +57,12 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Required(CONF_COUNTRY): vol.All(vol.Lower, cv.string),
                 vol.Required(CONF_CONTINENT): vol.All(vol.Lower, cv.string),
+                vol.Optional(
+                    CONF_SUPPORTED_FEATURES, default=[]
+                ): vol.All(cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]),
+                vol.Optional(
+                    CONF_UNSUPPORTED_FEATURES, default=[]
+                ): vol.All(cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]),
             }
         )
     },
@@ -31,6 +70,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 ECOVACS_DEVICES = "ecovacs_devices"
+ECOVACS_CONFIG = "ecovacs_config"
 
 # Generate a random device ID on each bootup
 ECOVACS_API_DEVICEID = "".join(
@@ -43,6 +83,7 @@ def setup(hass, config):
     _LOGGER.debug("Creating new Ecovacs component")
 
     hass.data[ECOVACS_DEVICES] = []
+    hass.data[ECOVACS_CONFIG] = []
 
     from ozmo import EcoVacsAPI, VacBot
 
@@ -87,6 +128,46 @@ def setup(hass, config):
 
     if hass.data[ECOVACS_DEVICES]:
         _LOGGER.debug("Starting vacuum components")
+
+        dconfig = config[DOMAIN]
+
+        if len(dconfig.get(CONF_SUPPORTED_FEATURES)) == 0:
+            dconfig[CONF_SUPPORTED_FEATURES] = STRING_TO_SERVICE.keys()
+
+        if CONF_UNSUPPORTED_FEATURES in dconfig:
+            filtered_features = []
+            for supported_feature in dconfig.get(CONF_SUPPORTED_FEATURES):
+                if supported_feature not in dconfig.get(CONF_UNSUPPORTED_FEATURES):
+                    filtered_features.append(supported_feature)
+            dconfig[CONF_SUPPORTED_FEATURES] = filtered_features
+
+        _LOGGER.warning("SUPPORTED FEATURES")
+        _LOGGER.warning(dconfig.get(CONF_SUPPORTED_FEATURES))
+
+        deebot_config = {
+            CONF_SUPPORTED_FEATURES: strings_to_services(dconfig.get(CONF_SUPPORTED_FEATURES), STRING_TO_SERVICE)
+        }
+
+        hass.data[ECOVACS_CONFIG].append(deebot_config)
+
+        _LOGGER.warning(hass.data[ECOVACS_CONFIG])
+
         discovery.load_platform(hass, "vacuum", DOMAIN, {}, config)
 
     return True
+
+def services_to_strings(services, service_to_string):
+    """Convert SUPPORT_* service bitmask to list of service strings."""
+    strings = []
+    for service in service_to_string:
+        if service & services:
+            strings.append(service_to_string[service])
+    return strings
+
+
+def strings_to_services(strings, string_to_service):
+    """Convert service strings to SUPPORT_* service bitmask."""
+    services = 0
+    for string in strings:
+        services |= string_to_service[string]
+    return services
