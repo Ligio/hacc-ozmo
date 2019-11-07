@@ -36,6 +36,7 @@ deebot:
   unsupported_features:
   - clean_spot
   - fan_speed
+  - [....]
 ``` 
 
 This is the list of supported/unsupported features you can use:
@@ -67,7 +68,7 @@ vacuum_script_set_water:
   - service: vacuum.send_command
     data:
       command: set_water_level
-      entity_id: vacuum.ambrogina
+      entity_id: vacuum.<YOUR-ID>
       params:
         level: low|medium|high
 ```
@@ -81,7 +82,7 @@ vacuum_script_clean_area:
   - service: vacuum.send_command
     data:
       command: spot_area
-      entity_id: vacuum.ambrogina
+      entity_id: vacuum.<YOUR-ID>
       params:
         area: 0,2  # multiple areas index from your ecovacs app
 
@@ -91,9 +92,9 @@ vacuum_script_clean_map:
   - service: vacuum.send_command
     data:
       command: spot_area
-      entity_id: vacuum.ambrogina
+      entity_id: vacuum.<YOUR-ID>
       params:
         map: "1580.0,-4087.0,3833.0,-7525.0"  # x,y coords from your ecovacs app
 ```
 
-To get area/map info I've installed "Packet Capture" app on my Android phone and used it with Ecovacs app to find needed info
+To get area/map info I've installed "Packet Capture" app on my Android phone and used it with Ecovacs app to sniff network traffic and find needed info
