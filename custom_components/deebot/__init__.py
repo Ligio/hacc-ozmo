@@ -141,8 +141,8 @@ def setup(hass, config):
                     filtered_features.append(supported_feature)
             dconfig[CONF_SUPPORTED_FEATURES] = filtered_features
 
-        _LOGGER.warning("SUPPORTED FEATURES")
-        _LOGGER.warning(dconfig.get(CONF_SUPPORTED_FEATURES))
+        _LOGGER.debug("SUPPORTED FEATURES")
+        _LOGGER.debug(dconfig.get(CONF_SUPPORTED_FEATURES))
 
         deebot_config = {
             CONF_SUPPORTED_FEATURES: strings_to_services(dconfig.get(CONF_SUPPORTED_FEATURES), STRING_TO_SERVICE)
@@ -150,7 +150,7 @@ def setup(hass, config):
 
         hass.data[ECOVACS_CONFIG].append(deebot_config)
 
-        _LOGGER.warning(hass.data[ECOVACS_CONFIG])
+        _LOGGER.debug(hass.data[ECOVACS_CONFIG])
 
         discovery.load_platform(hass, "vacuum", DOMAIN, {}, config)
 
