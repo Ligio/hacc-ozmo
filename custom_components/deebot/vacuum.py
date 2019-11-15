@@ -221,7 +221,17 @@ class EcovacsDeebotVacuum(VacuumDevice):
         
         or
         
-        Send command to edge clean for 10 minutes.
+        {
+          "entity_id": "vacuum.<ID>",
+          "command": "spot_area",
+          "params" : {
+            "map": "1580.0,-4087.0,3833.0,-7525.0"
+          }
+        }
+		
+		or
+        
+        Send command to edge clean.
 
         {
           "entity_id": "vacuum.<ID>",
