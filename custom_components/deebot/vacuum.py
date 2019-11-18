@@ -228,9 +228,21 @@ class EcovacsDeebotVacuum(VacuumDevice):
             "map": "1580.0,-4087.0,3833.0,-7525.0"
           }
         }
+		
+		or
+        
+        Send command to edge clean.
+
+        {
+          "entity_id": "vacuum.<ID>",
+          "command": "clean_edge",
+        }
         """
 
-        from ozmo import VacBotCommand
+        from ozmo import VacBotCommand, Edge
+
+        if command == 'clean_edge':
+            self.device.run(Edge())
 
         if command == 'spot_area':
             if 'area' in params:
