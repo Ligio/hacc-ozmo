@@ -5,6 +5,12 @@ from homeassistant.components.vacuum import (
     SUPPORT_FAN_SPEED,
     VacuumDevice,
 )
+
+try:
+    from homeassistant.components.vacuum import VacuumEntity
+except ImportError:
+    from homeassistant.components.vacuum import VacuumDevice as VacuumEntity
+
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import ECOVACS_DEVICES, CONF_SUPPORTED_FEATURES, ECOVACS_CONFIG
@@ -24,7 +30,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(vacuums, True)
 
 
-class EcovacsDeebotVacuum(VacuumDevice):
+class EcovacsDeebotVacuum(VacuumEntity):
     """Ecovacs Vacuums such as Deebot."""
 
     def __init__(self, device, config):
