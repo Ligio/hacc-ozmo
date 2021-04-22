@@ -1,5 +1,5 @@
-# hacc-ozmo
-Home Assistant Custom Component for Ecovacs Deebot Ozmo 900 
+# hacc-deebot
+Home Assistant Custom Component for Ecovacs Deebot
 
 Currently, this has been tested on the Ozmo 900 and N79
 
