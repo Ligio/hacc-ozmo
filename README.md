@@ -1,5 +1,7 @@
-# hacc-ozmo
-Home Assistant Custom Component for Ecovacs Deebot Ozmo 900
+# hacc-deebot
+Home Assistant Custom Component for Ecovacs Deebot
+
+Currently, this has been tested on the Ozmo 900 and N79
 
 With this Home Assistant Custom Component you'll be able to 
 * play/pause/stop
