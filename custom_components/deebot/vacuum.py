@@ -225,9 +225,9 @@ class EcovacsDeebotVacuum(StateVacuumEntity):
             self.pause()
 
     async def async_start_pause(self, **kwargs):
-	    """Start, pause or resume the cleaning task."""
-	    self.start_pause()
-	    await self.async_update_ha_state()
+        """Start, pause or resume the cleaning task."""
+        self.start_pause()
+        await self.async_update_ha_state()
 
     def clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
