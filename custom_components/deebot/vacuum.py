@@ -2,6 +2,13 @@
 import logging
 
 from homeassistant.components.vacuum import (
+    ATTR_STATUS,
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_ERROR,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
     SUPPORT_FAN_SPEED,
     VacuumDevice,
 )
@@ -20,6 +27,16 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
 
+STATE_MAP = {
+    "cleaning": STATE_CLEANING,
+    "auto": STATE_CLEANING,
+    "spot_area": STATE_CLEANING,
+    "charging": STATE_DOCKED,
+    "idle": STATE_DOCKED,
+    "pause": STATE_PAUSED,
+    "returning": STATE_RETURNING,
+    "stop": STATE_IDLE,
+}
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ecovacs vacuums."""
@@ -111,7 +128,10 @@ class EcovacsDeebotVacuum(StateVacuumEntity):
 
     @property
     def state(self):
-        return self.status
+        try:
+            return STATE_MAP[self.device.vacuum_status]
+        except KeyError:
+            return self.status
 
     @property
     def status(self):
@@ -123,6 +143,13 @@ class EcovacsDeebotVacuum(StateVacuumEntity):
         from ozmo import Charge
 
         self.device.run(Charge())
+	
+    @property
+    def battery_icon(self):
+        """Return the battery icon for the vacuum cleaner."""
+        return icon_for_battery_level(
+            battery_level=self.battery_level, charging=self.is_charging
+        )
 
     @property
     def battery_level(self):
@@ -294,5 +321,6 @@ class EcovacsDeebotVacuum(StateVacuumEntity):
             data[attr_name] = int(val * 100)
 
         data["clean_mode"] = self.clean_mode
+	data[ATTR_STATUS] = self.state
 
         return data
