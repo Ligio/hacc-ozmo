@@ -321,6 +321,6 @@ class EcovacsDeebotVacuum(StateVacuumEntity):
             data[attr_name] = int(val * 100)
 
         data["clean_mode"] = self.clean_mode
-	data[ATTR_STATUS] = self.state
+        data[ATTR_STATUS] = self.state
 
         return data
