@@ -131,7 +131,7 @@ class EcovacsDeebotVacuum(StateVacuumEntity):
         try:
             return STATE_MAP[self.device.vacuum_status]
         except KeyError:
-            return self.status
+            return STATE_ERROR
 
     @property
     def status(self):
@@ -321,6 +321,6 @@ class EcovacsDeebotVacuum(StateVacuumEntity):
             data[attr_name] = int(val * 100)
 
         data["clean_mode"] = self.clean_mode
-	data[ATTR_STATUS] = self.state
+	    data[ATTR_STATUS] = self.state
 
         return data
