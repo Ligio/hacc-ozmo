@@ -1,5 +1,6 @@
 """Support for Ecovacs Deebot Vacuums with Spot Area cleaning."""
 import logging
+from functools import partial
 
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
@@ -174,8 +175,7 @@ class EcovacsDeebotVacuum(StateVacuumEntity):
         self._fan_speed = fan_speed
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
-        self.set_fan_speed(fan_speed)
-        await self.async_update_ha_state()
+        await self.hass.async_add_executor_job(partial(self.set_fan_speed, fan_speed))
 
     @property
     def fan_speed_list(self):
@@ -226,8 +226,7 @@ class EcovacsDeebotVacuum(StateVacuumEntity):
 
     async def async_start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task."""
-        self.start_pause()
-        await self.async_update_ha_state()
+        await self.hass.async_add_executor_job(self.start_pause)
 
     def clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
