@@ -7,9 +7,9 @@ from homeassistant.components.vacuum import (
 )
 
 try:
-    from homeassistant.components.vacuum import VacuumEntity
+    from homeassistant.components.vacuum import StateVacuumEntity
 except ImportError:
-    from homeassistant.components.vacuum import VacuumDevice as VacuumEntity
+    from homeassistant.components.vacuum import StateVacuumDevice as StateVacuumEntity
 
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(vacuums, True)
 
 
-class EcovacsDeebotVacuum(VacuumEntity):
+class EcovacsDeebotVacuum(StateVacuumEntity):
     """Ecovacs Vacuums such as Deebot."""
 
     def __init__(self, device, config):
@@ -110,6 +110,10 @@ class EcovacsDeebotVacuum(VacuumEntity):
         return self._supported_features
 
     @property
+    def state(self):
+        return self.status
+
+    @property
     def status(self):
         """Return the status of the vacuum cleaner."""
         return self.device.vacuum_status
@@ -119,13 +123,6 @@ class EcovacsDeebotVacuum(VacuumEntity):
         from ozmo import Charge
 
         self.device.run(Charge())
-
-    @property
-    def battery_icon(self):
-        """Return the battery icon for the vacuum cleaner."""
-        return icon_for_battery_level(
-            battery_level=self.battery_level, charging=self.is_charging
-        )
 
     @property
     def battery_level(self):
@@ -224,9 +221,9 @@ class EcovacsDeebotVacuum(VacuumEntity):
             "area": "0,2"
           }
         }
-        
+
         or
-        
+
         {
           "entity_id": "vacuum.<ID>",
           "command": "spot_area",
@@ -234,9 +231,9 @@ class EcovacsDeebotVacuum(VacuumEntity):
             "map": "1580.0,-4087.0,3833.0,-7525.0"
           }
         }
-		
+
 		or
-        
+
         Send command to edge clean.
 
         {
