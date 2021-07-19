@@ -1,10 +1,10 @@
 {
   "domain": "deebot",
   "name": "Ecovacs Deebot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "documentation": "https://www.home-assistant.io/components/ecovacs",
   "requirements": [
-    "ozmo==1.0.3"
+    "ozmo==1.0.4"
   ],
   "dependencies": [],
   "codeowners": [
