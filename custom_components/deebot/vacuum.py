@@ -11,7 +11,7 @@ from homeassistant.components.vacuum import (
     STATE_PAUSED,
     STATE_RETURNING,
     SUPPORT_FAN_SPEED,
-    VacuumDevice,
+    VacuumEntity,
 )
 
 try:
@@ -315,7 +315,7 @@ class EcovacsDeebotVacuum(StateVacuumEntity):
         self.device.run(SetWaterLevel(level=level))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device-specific state attributes of this vacuum."""
         data = {}
         data[ATTR_ERROR] = self._error
