@@ -11,7 +11,6 @@ from homeassistant.components.vacuum import (
     STATE_PAUSED,
     STATE_RETURNING,
     SUPPORT_FAN_SPEED,
-    VacuumEntity,
 )
 
 try:
