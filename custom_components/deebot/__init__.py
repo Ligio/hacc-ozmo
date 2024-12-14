@@ -8,21 +8,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.vacuum import (
-    SUPPORT_BATTERY,
-    SUPPORT_CLEAN_SPOT,
-    SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_SEND_COMMAND,
-    SUPPORT_STATE,
-    SUPPORT_STATUS,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_START,
-    SUPPORT_PAUSE
-)
+from homeassistant.components.vacuum import VacuumEntityFeature
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,19 +20,19 @@ CONF_SUPPORTED_FEATURES = "supported_features"
 CONF_UNSUPPORTED_FEATURES = "unsupported_features"
 
 SERVICE_TO_STRING = {
-    SUPPORT_START: "start",
-    SUPPORT_PAUSE: "pause",
-    SUPPORT_STOP: "stop",
-    SUPPORT_RETURN_HOME: "return_home",
-    SUPPORT_FAN_SPEED: "fan_speed",
-    SUPPORT_BATTERY: "battery",
-    SUPPORT_STATE: "state",
-    SUPPORT_STATUS: "status",
-    SUPPORT_SEND_COMMAND: "send_command",
-    SUPPORT_LOCATE: "locate",
-    SUPPORT_CLEAN_SPOT: "clean_spot",
-    SUPPORT_TURN_ON: "turn_on",
-    SUPPORT_TURN_OFF: "turn_off"
+    VacuumEntityFeature.START: "start",
+    VacuumEntityFeature.PAUSE: "pause",
+    VacuumEntityFeature.STOP: "stop",
+    VacuumEntityFeature.RETURN_HOME: "return_home",
+    VacuumEntityFeature.FAN_SPEED: "fan_speed",
+    VacuumEntityFeature.BATTERY: "battery",
+    VacuumEntityFeature.STATE: "state",
+    VacuumEntityFeature.STATUS: "status",
+    VacuumEntityFeature.SEND_COMMAND: "send_command",
+    VacuumEntityFeature.LOCATE: "locate",
+    VacuumEntityFeature.CLEAN_SPOT: "clean_spot",
+    VacuumEntityFeature.TURN_ON: "turn_on",
+    VacuumEntityFeature.TURN_OFF: "turn_off"
 }
 
 STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
@@ -159,7 +145,7 @@ def setup(hass, config):
     return True
 
 def services_to_strings(services, service_to_string):
-    """Convert SUPPORT_* service bitmask to list of service strings."""
+    """Convert VacuumEntityFeature service bitmask to list of service strings."""
     strings = []
     for service in service_to_string:
         if service & services:
@@ -168,7 +154,7 @@ def services_to_strings(services, service_to_string):
 
 
 def strings_to_services(strings, string_to_service):
-    """Convert service strings to SUPPORT_* service bitmask."""
+    """Convert service strings to VacuumEntityFeature service bitmask."""
     services = 0
     for string in strings:
         services |= string_to_service[string]

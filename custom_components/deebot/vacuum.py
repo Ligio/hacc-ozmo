@@ -10,15 +10,9 @@ from homeassistant.components.vacuum import (
     STATE_IDLE,
     STATE_PAUSED,
     STATE_RETURNING,
-    SUPPORT_FAN_SPEED,
-    VacuumEntity,
 )
 
-try:
-    from homeassistant.components.vacuum import StateVacuumEntity
-except ImportError:
-    from homeassistant.components.vacuum import StateVacuumDevice as StateVacuumEntity
-
+from homeassistant.components.vacuum import StateVacuumEntity, VacuumEntityFeature
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import ECOVACS_DEVICES, CONF_SUPPORTED_FEATURES, ECOVACS_CONFIG
@@ -163,7 +157,7 @@ class EcovacsDeebotVacuum(StateVacuumEntity):
     @property
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
-        if bool(self.supported_features & SUPPORT_FAN_SPEED):
+        if bool(self.supported_features & VacuumEntityFeature.FAN_SPEED):
             return self._fan_speed
         return 'normal'
 
