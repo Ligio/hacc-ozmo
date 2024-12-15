@@ -1,0 +1,5 @@
+{
+    "name": "Ecovacs Deebot Ozmo 9000",
+    "render_readme": true,
+    "homeassistant": "2024.12.0"
+}
